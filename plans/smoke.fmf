@@ -1,4 +1,7 @@
 summary:
     Just a basic smoke test
+prepare:
+    how: ansible
+    playbooks: ansible/packages.yml
 execute:
     script: tmt --help

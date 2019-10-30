@@ -1,5 +1,19 @@
 - hosts: all
   tasks:
+  - name: Install EPEL
+    dnf:
+      state: present
+      name: epel-release
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat'
+
+  - name: Add vagrant from copr for CentOS/RHEL
+    command: dnf copr enable -y pvalena/vagrant
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat'
+
+  - name: Add ruby for CentOS/RHEL
+    command: dnf copr enable -y pvalena/ruby
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat'
+
   - name: Install necessary dependencies
     dnf:
       state: present

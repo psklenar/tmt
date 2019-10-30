@@ -18,9 +18,11 @@ jobs:
   metadata:
     targets:
       - fedora-all
+      - epel-8
 
 - job: tests
   trigger: pull_request
   metadata:
     targets:
     - fedora-all
+    - epel-8
