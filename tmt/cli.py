@@ -12,6 +12,7 @@ import fmf
 import tmt
 import tmt.utils
 import tmt.convert
+import tmt.export
 import tmt.steps
 import tmt.templates
 
@@ -465,13 +466,19 @@ def convert(context, paths, makefile, nitrate, purpose, **kwargs):
     '--format', 'format_', default='yaml', show_default=True, metavar='FORMAT',
     help='Output format.')
 @click.option(
+    '--nitrate / --no-nitrate', default=False,
+    help='Export test metadata to Nitrate')
+@click.option(
     '-d', '--debug', is_flag=True,
     help='Provide as much debugging details as possible.')
-def export(context, format_, **kwargs):
+def export(context, nitrate, format_, **kwargs):
     """ Export test data into the desired format. """
     tmt.Test._context = context
     for test in context.obj.tree.tests():
         echo(test.export(format_=format_))
+
+    if nitrate:
+        tmt.export.export_to_nitrate()
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
