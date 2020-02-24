@@ -20,18 +20,18 @@ DEFAULT_PRODUCT = nitrate.Product(name='RHEL Tests')
 #  Export
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# TODO debug (echos like when converting)
-
 
 def export_to_nitrate():
     """ Export fmf metadata to nitrate test cases """
-    tree = fmf.Tree('.')
-    for fmf_case in list(tree.prune(names=[os.path.abspath('.')[len(tree.root):]])):
+    path = os.path.abspath('.')
+    echo(style("Checking the '{0}' directory.".format(path), fg='red'))
+
+    tree = fmf.Tree(path)
+    for fmf_case in list(tree.prune(names=[path[len(tree.root):]])):
         fmf_case_attrs = fmf_case.get()
         case_id = fmf_case_attrs['tcms'][3:]
         nitrate_case = nitrate.TestCase(int(case_id))
-        if 'tag' not in fmf_case_attrs:
-            fmf_case_attrs['tag'] = list()
+        echo("Test case '{0}' found.".format(fmf_case_attrs['tcms']))
 
         # Components
         try:
@@ -43,9 +43,14 @@ def export_to_nitrate():
                     name=comp, product=DEFAULT_PRODUCT.id) for comp in fmf_case_attrs['component']]
                 # TODO exception not existing component
                 nitrate_case.components.add(comp_list)
+                echo(style('components: ', fg='green') +
+                     ' '.join(fmf_case_attrs['component']))
         except KeyError:
             # Defaults to no components
             pass
+
+        if 'tag' not in fmf_case_attrs:
+            fmf_case_attrs['tag'] = list()
 
         # 'tier' attribute into Tier tag
         try:
@@ -59,12 +64,15 @@ def export_to_nitrate():
         fmf_case_attrs['tag'].append('fmf-export')
         tag_list = [nitrate.Tag(tag) for tag in fmf_case_attrs['tag']]
         nitrate_case.tags.add(tag_list)
+        echo(style('tags: ', fg='green') +
+             ' '.join(set(fmf_case_attrs['tag'])))
 
         # Default tester
         try:
             email_address = email.utils.parseaddr(fmf_case_attrs['contact'])[1]
             # TODO handle nitrate user not existing and other stuff
             nitrate_case.tester = nitrate.User(email_address)
+            echo(style('default tester: ', fg='green') + email_address)
         except KeyError:
             # Defaults to author of the test case
             pass
@@ -72,37 +80,49 @@ def export_to_nitrate():
         # Duration
         try:
             nitrate_case.time = fmf_case_attrs['duration']
+            echo(style('estimated time: ', fg='green') +
+                 fmf_case_attrs['duration'])
         except KeyError:
             # Defaults to 5 minutes
             nitrate_case.time = '5m'
+            echo(style('estimated time: ', fg='green') + '5m')
 
         # Status
         try:
             if fmf_case_attrs['enabled']:
                 nitrate_case.status = nitrate.CaseStatus('CONFIRMED')
+                echo(style('status: ', fg='green') + 'CONFIRMED')
             else:
                 nitrate_case.status = nitrate.CaseStatus('DISABLED')
+                echo(style('status: ', fg='green') + 'DISABLED')
         except KeyError:
             # Defaults to enabled
             nitrate_case.status = nitrate.CaseStatus('CONFIRMED')
+            echo(style('status: ', fg='green') + 'CONFIRMED')
 
         # Environment
         try:
-            nitrate_case.arguments = ' '.join(
-                tmt.utils.dict_to_shell(fmf_case_attrs['environment']))
+            env = ' '.join(tmt.utils.dict_to_shell(
+                fmf_case_attrs['environment']))
+            nitrate_case.arguments = env
+            echo(style('arguments: ', fg='green') + env)
         except KeyError:
             # FIXME unable to set empty arguments, possibly error in xmlrpc, BZ#1805687
             nitrate_case.arguments = ' '
+            echo(style('arguments: ', fg='green') + "' '")
 
         struct_field = tmt.utils.StructuredField(nitrate_case.notes)
+        echo(style('Structured Field: ', fg='blue'))
 
-        # Mapping of fmf case attributes to nitrate sections
+        # Mapping of structured field sections to fmf case attributes
         section_to_attr = {'relevancy': 'relevancy', 'description': 'summary',
                            'purpose-file': 'description', 'hardware': 'extra-hardware', 'pepa': 'extra-pepa'}
 
         for section, attribute in section_to_attr.items():
             try:
                 struct_field.set(section, fmf_case_attrs[attribute])
+                echo(style(section + ': ', fg='green') +
+                     fmf_case_attrs[attribute].strip())
             except KeyError:
                 pass
 
@@ -114,11 +134,14 @@ def export_to_nitrate():
 
         # Saving case.notes with edited StructField
         nitrate_case.notes = struct_field.save()
+        echo(style('fmf: ', fg='green') + pprint.pformat(fmf_id))
 
         # Update nitrate test case
         nitrate_case.update()
+        echo(style("Test case '{0}' successfully exported to nitrate.\n".format(
+            fmf_case_attrs['tcms']), fg='green'))
 
-        return 0
+    return 0
 
 
 # TODO Rewrite
