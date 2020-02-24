@@ -131,10 +131,16 @@ def export_to_nitrate():
                                name=fmf_case.name)[0]
 
         struct_field.set('fmf', pprint.pformat(fmf_id))
+        echo(style('fmf: ', fg='green') + pprint.pformat(fmf_id))
+
+        fmf_warning = """Test case was ported to fmf and is maintaned in git.
+Any changes made here might be overwritten.
+More information here: https://tmt.readthedocs.io/en/latest/stories/cli.html#id14\n\n"""
+        if fmf_warning not in struct_field.header():
+            struct_field.header(fmf_warning + struct_field.header())
 
         # Saving case.notes with edited StructField
         nitrate_case.notes = struct_field.save()
-        echo(style('fmf: ', fg='green') + pprint.pformat(fmf_id))
 
         # Update nitrate test case
         nitrate_case.update()
