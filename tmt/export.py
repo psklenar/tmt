@@ -29,7 +29,10 @@ def export_to_nitrate():
     tree = fmf.Tree(path)
     for fmf_case in list(tree.prune(names=[path[len(tree.root):]])):
         fmf_case_attrs = fmf_case.get()
-        case_id = fmf_case_attrs['tcms'][3:]
+        try:
+            case_id = fmf_case_attrs['tcms'][3:]
+        except KeyError:
+            continue
         nitrate_case = nitrate.TestCase(int(case_id))
         echo("Test case '{0}' found.".format(fmf_case_attrs['tcms']))
 
