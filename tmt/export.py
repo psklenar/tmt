@@ -12,9 +12,16 @@ import email
 import fmf
 import os
 
+# Import nitrate conditionally
+try:
+    import nitrate
+    # Needed for nitrate.Component
+    DEFAULT_PRODUCT = nitrate.Product(name='RHEL Tests')
+except ImportError:
+    nitrate = None
+    DEFAULT_PRODUCT = ''
+
 log = fmf.utils.Logging('tmt').logger
-# Needed for nitrate.Component
-DEFAULT_PRODUCT = nitrate.Product(name='RHEL Tests')
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #  Export
