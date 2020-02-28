@@ -174,9 +174,15 @@ def main(context, root, **kwargs):
     '-i', '--id', 'id_', help='Run id (name or directory path).', metavar="ID")
 @click.option(
     '-a', '--all', 'all_', help='Run all steps, customize some.', is_flag=True)
+@click.option(
+    '-e', '--env', 'env_',
+    help='Set environment variable. Can be specified multiple times.',
+    metavar='KEY=VALUE',
+    multiple='True'
+)
 @verbose_debug_quiet
 @force_dry
-def run(context, all_, id_, **kwargs):
+def run(context, all_, id_, env_, **kwargs):
     """ Run test steps. """
     # Initialize
     run = tmt.Run(id_, context.obj.tree)

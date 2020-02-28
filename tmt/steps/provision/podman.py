@@ -24,6 +24,10 @@ class ProvisionPodman(ProvisionBase):
         self.container_name = None
         self.container_id = None
 
+        # Environment variables for podman command
+        self.podman_env = ' '.join(
+            f"-e '{env}'" for env in self.opt('env_'))
+
     def podman(self, command, **kwargs):
         return self.run(f'podman {command}', **kwargs)[0].rstrip()
 
@@ -58,10 +62,10 @@ class ProvisionPodman(ProvisionBase):
         tmt_workdir = self.step.plan.workdir
         self.container_name = 'tmt' + tmt_workdir.replace('/', '-')
 
-        # Run the container
+        # Run the container, add environment variables
         self.container_id = self.podman(
-            f'run --name {self.container_name} '
-            f'-v {tmt_workdir}:{tmt_workdir}:Z -itd {self.image}',
+            f'run --name {self.container_name} {self.podman_env} '
+            f'-v {tmt_workdir}:{tmt_workdir}:Z -itd {self.image} ',
             message=f'running container {self.image}')
 
     def execute(self, *args, **kwargs):
@@ -70,16 +74,20 @@ class ProvisionPodman(ProvisionBase):
                 'Could not execute without provisioned container')
 
         self.info('args', self.join(args), 'red')
-        self.podman(f'exec {self.container_name} {self.join(args)}')
+        self.podman(
+            f'exec {self.podman_env} {self.container_name} '
+            f'{self.join(args)}')
 
     def _prepare_ansible(self, what):
         """ Prepare using ansible """
         # Playbook paths should be relative to the metadata tree root
         playbook = os.path.join(self.step.plan.run.tree.root, what)
+
         # Run ansible playbook against localhost, in verbose mode
-        # Set collumns to 80 characters
+        # Set columns to 80 characters so it looks the same as with vagrant
+        # Note: ansible and podman use the same -e option for env vars
         self.run(
-            f'stty cols 80; podman unshare ansible-playbook '
+            f'stty cols 80; podman unshare ansible-playbook {self.podman_env} '
             f'-v -c podman -i {self.container_name}, {playbook}')
 
     def _prepare_shell(self, what):
