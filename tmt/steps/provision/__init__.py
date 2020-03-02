@@ -8,7 +8,7 @@ import os
 from click import echo
 
 from tmt.utils import SpecificationError
-from tmt.steps.provision import vagrant, localhost, podman
+from tmt.steps.provision import vagrant, localhost, podman, testcloud
 
 
 class Provision(tmt.steps.Step):
@@ -24,6 +24,7 @@ class Provision(tmt.steps.Step):
         'localhost': localhost.ProvisionLocalhost,
         'container': podman.ProvisionPodman,
         'podman': podman.ProvisionPodman,
+        'testcloud': testcloud.ProvisionTestcloud
     }
 
     # Default implementation for provision is a virtual machine
