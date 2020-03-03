@@ -1,0 +1,11 @@
+story: 'As a user I want to rerun tests easily'
+
+description:
+    Rerun previous run without the need to specify the previous run id.
+    The command is a shortcut for
+
+        tmt run --id PREVIOUS_RUN
+
+    All other options are inherited from `tmt run`.
+
+example: tmt rerun
